@@ -13,9 +13,10 @@ const stream = flyd.combine( (...params) => {
 }, fruits);
 
 const endStream = flyd.combine( fruits => {
-  const isEnd = _.every(fruits(), fruit => fruit.icon === RP);
+  const isEnd = _.every(fruits(), fruit => fruit.icon === RP && !fruit.end);
   if(isEnd)return true;
 }, [stream]);
+
 
 function rollFruits(){
   _.each(fruits, fruit => rollFruit(fruit));
@@ -43,4 +44,9 @@ export default {
   on,
   onEnd
 }
+
+onEnd( () => {
+  _.each(fruits, fruit => fruit({id: fruit().id, color: "#cd4436", icon: RP, end: true}));
+})
+
 
