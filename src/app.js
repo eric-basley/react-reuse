@@ -1,75 +1,58 @@
 import React, {Component} from 'react';
-import _ from 'lodash';
+import CompA, {actionsTypes} from './lib/compA';
+
+const labelName = (label, count) => label + count;
 
 export default class App extends Component{
-  state = {fruits: []};
+  state = {
+    label: "COUCOU",
+    changeLabel: false,
+    count: 0,
+  }
 
-  componentWillMount(){
-    const store = this.props.store;
-    store.on(fruits => {
-      this.setState({fruits});
-    })
+  componentDidMount(){
+    this.compB.showLabel(labelName(this.state.label, this.state.count) + '-compB');
+    this.compA.on( actionsTypes.SHOW_LABEL, data => {
+      this.compB.showLabel(data.label + '-compB');
+    });
+  }
 
-    store.onEnd( () => {
-      console.log("this is the end ...")
-    })
+  init = (e) => {
+    this.setState({count: 0}, () => {
+      this.compB.showLabel(labelName(this.state.label, this.state.count) + '-compB');
+    });
+  }
 
-    store.rollFruits();
+  stop = (e) => {
+    e.preventDefault();
+    this.setState({changeLabel: false});
+  }
+
+  start = (e) => {
+    const doChangeLabel = () => {
+      setTimeout( () => {
+        this.setState({count: this.state.count + 1})
+        const {changeLabel} = this.state;
+        if(changeLabel) doChangeLabel();
+      }, 500);
+    }
+    e.preventDefault();
+    this.setState({changeLabel: true});
+    doChangeLabel();
   }
 
   render(){
     return (
       <div>
-        <BanditManchot fruits={this.state.fruits}/>
+        <button onClick={this.start}>START</button>
+        <button onClick={this.stop}>STOP</button>
+        <button onClick={this.init}>INIT</button>
+        <CompA ref={(c) => this.compA = c} label={labelName(this.state.label, this.state.count)}/>
+        <span> {' ====> '} </span>
+        <CompA ref={(c) => this.compB = c}/>
       </div>
     );
   }
 }
 
-const BanditManchot = ({fruits}) => {
-  const styles = {
-    container: {
-      marginLeft: 'auto',
-      marginRight: 'auto',
-      marginTop: '50px',
-      height: '200px',
-      width: '70%',
-      display: 'flex',
-      flexWrap: 'wrap',
-      justifyContent: 'space-around',
-      alignItems: 'center',
-    }
-  };
-
-  const fruitsItems = fruits.map(fruit => <FruitItem key={fruit.id} fruit={fruit}/>);
-
-  return (
-    <div style={styles.container}>
-      {fruitsItems}
-    </div>
-  );
-}
-
-class FruitItem extends Component{
-  shouldComponentUpdate(nextProps){
-    return (this.props.fruit.icon !== nextProps.fruit.icon || this.props.fruit.color !== nextProps.fruit.color);
-  }
-
-  render(){
-    const {fruit} = this.props;
-    const styles = {
-      item:{
-        flexBasis: '25%',
-        fontSize: '10em',
-        color: fruit.color
-      }
-    };
-    const fruitIcon =  <i className={`fa fa-${fruit.icon ? fruit.icon : 'spinner fa-spin'}`}/>;
-    return (
-      <div style={styles.item}>
-        {fruitIcon}
-      </div>
-    )
-  }
-}
 
